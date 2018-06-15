@@ -1,11 +1,11 @@
 ## Specify phone tech before including full_phone	
-$(call inherit-product, vendor/cm/config/telephony.mk)
+$(call inherit-product, vendor/lineage/config/telephony.mk)
 
 # Release name
 PRODUCT_RELEASE_NAME := goyavewifi
 
-# Inherit some common CM stuff.
-$(call inherit-product, vendor/cm/config/common_mini_tablet_wifionly.mk)
+# Inherit some common Lineage stuff.
+$(call inherit-product, vendor/lineage/config/common_mini_tablet_wifionly.mk)
 
 # Inherit device configuration
 $(call inherit-product, $(LOCAL_PATH)/goyavewifi.mk)
