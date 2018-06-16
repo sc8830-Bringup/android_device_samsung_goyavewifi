@@ -18,6 +18,9 @@
 # In particular, you can add lunch options with the add_lunch_combo
 # function: add_lunch_combo generic-eng
 
+# Apply patches first
+sh device/samsung/goyavewifi/patches/apply.sh;
+
 for i in eng user userdebug; do
 add_lunch_combo lineage_goyavewifi-${i};
 done
