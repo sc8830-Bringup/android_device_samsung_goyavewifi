@@ -43,5 +43,4 @@ vendor/lib/libomx_m4vh263dec_sw_sprd.so
 vendor/lib/libomx_m4vh263enc_hw_sprd.so
 
 # HAL
-vendor/lib/hw/sensors.sc8830.so
-
+vendor/lib/sensors.vendor.sc8830.so
