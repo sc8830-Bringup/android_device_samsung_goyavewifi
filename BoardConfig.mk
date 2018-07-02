@@ -60,8 +60,5 @@ TARGET_SCREEN_WIDTH := 600
 # Assert
 TARGET_OTA_ASSERT_DEVICE := SM-T113,SM-T113NU,goyavewifi,goyave
 
-# Gralloc
-TARGET_UPDATED_MALI := true
-
 # Sensors
 TARGET_USES_SENSORS_WRAPPER := true
