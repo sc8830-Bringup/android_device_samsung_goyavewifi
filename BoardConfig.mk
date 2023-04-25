@@ -91,3 +91,6 @@ TARGET_OTA_ASSERT_DEVICE := SM-T113,SM-T113NU,goyavewifi,goyave
 
 # Sensors
 TARGET_USES_SENSORS_WRAPPER := true
+
+# SELinux policy
+BOARD_SEPOLICY_DIRS += device/samsung/goyavewifi/sepolicy
