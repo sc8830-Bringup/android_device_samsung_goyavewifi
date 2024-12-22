@@ -16,7 +16,7 @@
 -include device/samsung/scx30g-common/BoardConfigCommon.mk
 
 # Inherit from the proprietary version
--include vendor/samsung/core33g/BoardConfigVendor.mk
+-include vendor/samsung/goyavewifi/BoardConfigVendor.mk
 
 # Bootloader
 TARGET_BOOTLOADER_BOARD_NAME := sc7730s
@@ -52,15 +52,15 @@ WIFI_BAND := 802_11_ABG
 BOARD_HAVE_SAMSUNG_WIFI := true
 
 # Kernel
-TARGET_KERNEL_CONFIG := cyanogen_core33g_defconfig
-TARGET_KERNEL_SOURCE := kernel/samsung/core33g
+TARGET_KERNEL_CONFIG := lineage_goyavewifi_defconfig
+TARGET_KERNEL_SOURCE := kernel/samsung/sc8830
 
 # Resolution
 TARGET_SCREEN_HEIGHT := 1024
 TARGET_SCREEN_WIDTH := 600
 
 # Assert
-TARGET_OTA_ASSERT_DEVICE := SM-G360H,SM-G360HU,core33g,core33gdd,core33gdx,goyave
+TARGET_OTA_ASSERT_DEVICE := SM-T113,SM-T113NU,goyavewifi,goyave
 
 # Gralloc
 TARGET_UPDATED_MALI := true
