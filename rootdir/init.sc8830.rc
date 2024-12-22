@@ -1,6 +1,6 @@
 import /init.board.rc
 import /init.sc8830.usb.rc
-import /init.goyave_base.rc
+import /init.goyavewifi_base.rc
 import /init.wifi.rc
 
 on early-init

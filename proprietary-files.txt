@@ -22,30 +22,14 @@ lib/libomission_avoidance.so
 lib/libatchannel.so
 vendor/firmware/vbc_eq
 
-# WiFi
-#bin/macloader
-
 # Bluetooth
 vendor/firmware/BCM43430A1_001.002.009.0013.0017_ORC_Goya_VE_37_4MHz.hcd
-
-# RIL
-#bin/rild
-#bin/modemd
-#bin/nvitemd
-#bin/phoneserver
-#bin/ext_data.sh
-#bin/ext_kill.sh
-#bin/ext_symlink.sh
-#bin/prepare_param.sh
-#lib/libril.so
-#lib/libreference-ril_sp.so
-#lib/libsecril-client.so
-#lib/libsecnativefeature.so
 
 # Camera
 lib/libisp.so
 lib/libmorpho_easy_hdr.so
 lib/libuvdenoise.so
+lib/libsecnativefeature.so
 
 # Codecs
 lib/libomx_aacdec_sprd.so
@@ -57,8 +41,9 @@ lib/libomx_m4vh263dec_hw_sprd.so
 lib/libomx_m4vh263enc_hw_sprd.so
 
 # HAL
-lib/hw/camera.sc8830.so
+#lib/hw/camera.sc8830.so
 lib/hw/gralloc.sc8830.so
 lib/hw/hwcomposer.sc8830.so
 lib/hw/sensors.sc8830.so
 lib/hw/sprd_gsp.sc8830.so
+
