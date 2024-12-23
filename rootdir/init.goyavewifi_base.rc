@@ -292,14 +292,6 @@ on boot
     rm /data/smd_started
     rm /data/sv_cno.info
 
-#permissions for cpufreq
-    chown radio system sys/power/cpufreq_min_limit
-    chown radio system sys/power/cpufreq_max_limit
-    chown radio system sys/power/cpufreq_table
-    chmod 0660 /sys/power/cpufreq_min_limit
-    chmod 0660 /sys/power/cpufreq_max_limit
-    chmod 0660 /sys/power/cpufreq_table
-
 # permissions for cpuhotplug
     chown radio system /sys/devices/system/cpu/cpuhotplug/cpu_num_min_limit
     chown radio system /sys/devices/system/cpu/cpuhotplug/cpu_num_limit

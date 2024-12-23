@@ -15,6 +15,7 @@ lib/egl/libGLES_mali.so
 lib/libfactoryutil.so
 lib/libomission_avoidance.so
 lib/libatchannel.so
+lib/libsecril-client.so
 vendor/firmware/vbc_eq
 
 # WiFi
