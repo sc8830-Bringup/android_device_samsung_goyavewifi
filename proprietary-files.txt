@@ -18,7 +18,10 @@ lib/libatchannel.so
 vendor/firmware/vbc_eq
 
 # WiFi
-bin/macloader
+etc/wifi/bcmdhd_apsta.bin
+etc/wifi/bcmdhd_mfg.bin
+etc/wifi/bcmdhd_sta.bin
+etc/wifi/nvram_net.txt
 
 # Bluetooth
 vendor/firmware/BCM43430A1_001.002.009.0013.0017_ORC_Goya_VE_37_4MHz.hcd
