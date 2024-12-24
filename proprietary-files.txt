@@ -1,19 +1,19 @@
 # Un-categorized
-bin/engpc
-lib/libatparser.so
+vendor/bin/engpc
+vendor/lib/libatparser.so
 
 # GPS
-bin/gpsd
-lib/libsprd_agps_agent.so
-lib/hw/gps.default.so
+vendor/bin/gpsd
+vendor/lib/libsprd_agps_agent.so
+vendor/lib/hw/gps.default.so
 
 # Graphics rendering
-lib/libboost.so
-lib/egl/libGLES_mali.so
+vendor/lib/libboost.so
+vendor/lib/egl/libGLES_mali.so
 
 # Audio
-lib/libfactoryutil.so
-lib/libomission_avoidance.so
+vendor/lib/libfactoryutil.so
+vendor/lib/libomission_avoidance.so
 vendor/firmware/vbc_eq
 
 # WiFi
@@ -26,23 +26,23 @@ vendor/etc/wifi/nvram_net.txt
 vendor/firmware/BCM43430A1_001.002.009.0013.0017_ORC_Goya_VE_37_4MHz.hcd
 
 # Camera
-lib/libisp.so
-lib/libmorpho_easy_hdr.so
-lib/libuvdenoise.so
-lib/libsecnativefeature.so
+vendor/lib/libisp.so
+vendor/lib/libmorpho_easy_hdr.so
+vendor/lib/libuvdenoise.so
+vendor/lib/libsecnativefeature.so
 
 # Codecs
-lib/libomx_aacdec_sprd.so
-lib/libomx_mp3dec_sprd.so
-lib/libomx_avcdec_hw_sprd.so
-lib/libomx_avcdec_sw_sprd.so
-lib/libomx_avcenc_hw_sprd.so
-lib/libomx_vpxdec_hw_sprd.so
-lib/libomx_m4vh263dec_hw_sprd.so
-lib/libomx_m4vh263dec_sw_sprd.so
-lib/libomx_m4vh263enc_hw_sprd.so
+vendor/lib/libomx_aacdec_sprd.so
+vendor/lib/libomx_mp3dec_sprd.so
+vendor/lib/libomx_avcdec_hw_sprd.so
+vendor/lib/libomx_avcdec_sw_sprd.so
+vendor/lib/libomx_avcenc_hw_sprd.so
+vendor/lib/libomx_vpxdec_hw_sprd.so
+vendor/lib/libomx_m4vh263dec_hw_sprd.so
+vendor/lib/libomx_m4vh263dec_sw_sprd.so
+vendor/lib/libomx_m4vh263enc_hw_sprd.so
 
 # HAL
-#lib/hw/camera.sc8830.so
-lib/hw/sensors.sc8830.so
+#vendor/lib/hw/camera.sc8830.so
+vendor/lib/hw/sensors.sc8830.so
 
