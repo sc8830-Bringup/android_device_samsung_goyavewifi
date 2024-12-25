@@ -29,7 +29,7 @@ TARGET_SCREEN_WIDTH := 600
 
 # Keylayouts
 PRODUCT_COPY_FILES += \
-	$(LOCAL_PATH)/keylayout/ist30xx_ts_input.kl:$(TARGET_COPY_OUT_VENDOR)/usr/keylayout/ist30xx_ts_input.kl \
+	$(LOCAL_PATH)/keylayout/MELFAS_MMS449_Touchscreen.kl:$(TARGET_COPY_OUT_VENDOR)/usr/keylayout/MELFAS_MMS449_Touchscreen.kl \
 	$(LOCAL_PATH)/keylayout/samsung-keypad.kl:$(TARGET_COPY_OUT_VENDOR)/usr/keylayout/samsung-keypad.kl \
 	$(LOCAL_PATH)/keylayout/sci-keypad.kl:$(TARGET_COPY_OUT_VENDOR)/usr/keylayout/sci-keypad.kl
 
