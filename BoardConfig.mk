@@ -63,16 +63,14 @@ TARGET_BOARD_CAMERA_FLASH_CTRL := false
 #face detect
 TARGET_BOARD_CAMERA_FACE_DETECT := false
 
-#sensor interface
-TARGET_BOARD_BACK_CAMERA_INTERFACE := ccir
-
-TARGET_BOARD_CAMERA_HAL_VERSION := HAL1.0
+#snesor interface
+TARGET_BOARD_BACK_CAMERA_INTERFACE := mipi
 
 #select camera zsl cap mode
 TARGET_BOARD_CAMERA_CAPTURE_MODE := false
 
 #rotation capture
-TARGET_BOARD_CAMERA_ROTATION_CAPTURE := false
+TARGET_BOARD_CAMERA_ROTATION_CAPTURE := true
 
 #select mipi d-phy mode(none, phya, phyb, phyab)
 TARGET_BOARD_BACK_CAMERA_MIPI := phyab
