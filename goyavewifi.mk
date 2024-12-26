@@ -52,10 +52,6 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PROPERTY_OVERRIDES += \
 #	ro.sys.sdcardfs=true
 
-# Camera
-PRODUCT_PACKAGES += \
-	camera.sc8830
-
 # Sensors
 PRODUCT_PACKAGES += \
 	sensors.sc8830
