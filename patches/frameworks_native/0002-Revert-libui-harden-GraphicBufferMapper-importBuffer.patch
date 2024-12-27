@@ -1,0 +1,320 @@
+From a9a5fb3cda55a9fb1f1c6fd42e3aab876cc0c997 Mon Sep 17 00:00:00 2001
+From: ahnet-69 <syedmusicrealise@gmail.com>
+Date: Fri, 27 Dec 2024 15:22:51 +0000
+Subject: [PATCH 2/5] Revert "libui: harden GraphicBufferMapper::importBuffer"
+
+This reverts commit dbbe33b95336efa74e8bb4ebcf6cba50919aa247.
+---
+ libs/ui/Android.bp                       |  1 -
+ libs/ui/Gralloc2.cpp                     | 52 +-----------------------
+ libs/ui/GraphicBuffer.cpp                | 26 +++++-------
+ libs/ui/GraphicBufferMapper.cpp          | 34 ++--------------
+ libs/ui/include/ui/Gralloc2.h            |  9 ----
+ libs/ui/include/ui/GraphicBuffer.h       |  4 --
+ libs/ui/include/ui/GraphicBufferMapper.h |  6 ---
+ 7 files changed, 15 insertions(+), 117 deletions(-)
+
+diff --git a/libs/ui/Android.bp b/libs/ui/Android.bp
+index 25c353a519..ab56cac2e3 100644
+--- a/libs/ui/Android.bp
++++ b/libs/ui/Android.bp
+@@ -83,7 +83,6 @@ cc_library_shared {
+         "android.hardware.graphics.allocator@2.0",
+         "android.hardware.graphics.common@1.1",
+         "android.hardware.graphics.mapper@2.0",
+-        "android.hardware.graphics.mapper@2.1",
+         "android.hardware.configstore@1.0",
+         "android.hardware.configstore-utils",
+         "libbase",
+diff --git a/libs/ui/Gralloc2.cpp b/libs/ui/Gralloc2.cpp
+index b4d5125cb0..73ccba0792 100644
+--- a/libs/ui/Gralloc2.cpp
++++ b/libs/ui/Gralloc2.cpp
+@@ -78,15 +78,9 @@ void Mapper::preload() {
+ Mapper::Mapper()
+ {
+     mMapper = IMapper::getService();
+-    if (mMapper == nullptr) {
+-        LOG_ALWAYS_FATAL("gralloc-mapper is missing");
+-    }
+-    if (mMapper->isRemote()) {
++    if (mMapper == nullptr || mMapper->isRemote()) {
+         LOG_ALWAYS_FATAL("gralloc-mapper must be in passthrough mode");
+     }
+-
+-    // IMapper 2.1 is optional
+-    mMapperV2_1 = hardware::graphics::mapper::V2_1::IMapper::castFrom(mMapper);
+ }
+ 
+ Gralloc2::Error Mapper::validateBufferDescriptorInfo(
+@@ -164,50 +158,6 @@ void Mapper::freeBuffer(buffer_handle_t bufferHandle) const
+             buffer, error);
+ }
+ 
+-Error Mapper::validateBufferSize(buffer_handle_t bufferHandle,
+-        const IMapper::BufferDescriptorInfo& descriptorInfo,
+-        uint32_t stride) const
+-{
+-    if (mMapperV2_1 == nullptr) {
+-        return Error::NONE;
+-    }
+-
+-    auto buffer = const_cast<native_handle_t*>(bufferHandle);
+-    auto ret = mMapperV2_1->validateBufferSize(buffer, descriptorInfo, stride);
+-
+-    return (ret.isOk()) ? static_cast<Error>(ret) : kTransactionError;
+-}
+-
+-void Mapper::getTransportSize(buffer_handle_t bufferHandle,
+-        uint32_t* outNumFds, uint32_t* outNumInts) const
+-{
+-    *outNumFds = uint32_t(bufferHandle->numFds);
+-    *outNumInts = uint32_t(bufferHandle->numInts);
+-
+-    if (mMapperV2_1 == nullptr) {
+-        return;
+-    }
+-
+-    Error error;
+-    auto buffer = const_cast<native_handle_t*>(bufferHandle);
+-    auto ret = mMapperV2_1->getTransportSize(buffer,
+-            [&](const auto& tmpError, const auto& tmpNumFds, const auto& tmpNumInts) {
+-                error = tmpError;
+-                if (error != Error::NONE) {
+-                    return;
+-                }
+-
+-                *outNumFds = tmpNumFds;
+-                *outNumInts = tmpNumInts;
+-            });
+-
+-    if (!ret.isOk()) {
+-        error = kTransactionError;
+-    }
+-    ALOGE_IF(error != Error::NONE, "getTransportSize(%p) failed with %d",
+-            buffer, error);
+-}
+-
+ Error Mapper::lock(buffer_handle_t bufferHandle, uint64_t usage,
+         const IMapper::Rect& accessRegion,
+         int acquireFence, void** outData) const
+diff --git a/libs/ui/GraphicBuffer.cpp b/libs/ui/GraphicBuffer.cpp
+index 7670ac6fbd..004cb81498 100644
+--- a/libs/ui/GraphicBuffer.cpp
++++ b/libs/ui/GraphicBuffer.cpp
+@@ -171,8 +171,6 @@ status_t GraphicBuffer::initWithSize(uint32_t inWidth, uint32_t inHeight,
+             inUsage, &handle, &outStride, mId,
+             std::move(requestorName));
+     if (err == NO_ERROR) {
+-        mBufferMapper.getTransportSize(handle, &mTransportNumFds, &mTransportNumInts);
+-
+         width = static_cast<int>(inWidth);
+         height = static_cast<int>(inHeight);
+         format = inFormat;
+@@ -202,8 +200,7 @@ status_t GraphicBuffer::initWithHandle(const native_handle_t* handle,
+ 
+     if (method == TAKE_UNREGISTERED_HANDLE || method == CLONE_HANDLE) {
+         buffer_handle_t importedHandle;
+-        status_t err = mBufferMapper.importBuffer(handle, width, height,
+-                layerCount, format, usage, stride, &importedHandle);
++        status_t err = mBufferMapper.importBuffer(handle, &importedHandle);
+         if (err != NO_ERROR) {
+             initWithHandle(nullptr, WRAP_HANDLE, 0, 0, 0, 0, 0, 0);
+ 
+@@ -216,7 +213,6 @@ status_t GraphicBuffer::initWithHandle(const native_handle_t* handle,
+         }
+ 
+         handle = importedHandle;
+-        mBufferMapper.getTransportSize(handle, &mTransportNumFds, &mTransportNumInts);
+     }
+ 
+     ANativeWindowBuffer::handle = handle;
+@@ -328,11 +324,11 @@ status_t GraphicBuffer::unlockAsync(int *fenceFd)
+ }
+ 
+ size_t GraphicBuffer::getFlattenedSize() const {
+-    return static_cast<size_t>(13 + (handle ? mTransportNumInts : 0)) * sizeof(int);
++    return static_cast<size_t>(13 + (handle ? handle->numInts : 0)) * sizeof(int);
+ }
+ 
+ size_t GraphicBuffer::getFdCount() const {
+-    return static_cast<size_t>(handle ? mTransportNumFds : 0);
++    return static_cast<size_t>(handle ? handle->numFds : 0);
+ }
+ 
+ status_t GraphicBuffer::flatten(void*& buffer, size_t& size, int*& fds, size_t& count) const {
+@@ -358,18 +354,18 @@ status_t GraphicBuffer::flatten(void*& buffer, size_t& size, int*& fds, size_t&
+     buf[12] = int(usage >> 32); // high 32-bits
+ 
+     if (handle) {
+-        buf[10] = int32_t(mTransportNumFds);
+-        buf[11] = int32_t(mTransportNumInts);
+-        memcpy(fds, handle->data, static_cast<size_t>(mTransportNumFds) * sizeof(int));
++        buf[10] = handle->numFds;
++        buf[11] = handle->numInts;
++        memcpy(fds, handle->data, static_cast<size_t>(handle->numFds) * sizeof(int));
+         memcpy(buf + 13, handle->data + handle->numFds,
+-                static_cast<size_t>(mTransportNumInts) * sizeof(int));
++                static_cast<size_t>(handle->numInts) * sizeof(int));
+     }
+ 
+     buffer = static_cast<void*>(static_cast<uint8_t*>(buffer) + sizeNeeded);
+     size -= sizeNeeded;
+     if (handle) {
+-        fds += mTransportNumFds;
+-        count -= static_cast<size_t>(mTransportNumFds);
++        fds += handle->numFds;
++        count -= static_cast<size_t>(handle->numFds);
+     }
+ 
+     return NO_ERROR;
+@@ -466,8 +462,7 @@ status_t GraphicBuffer::unflatten(
+ 
+     if (handle != 0) {
+         buffer_handle_t importedHandle;
+-        status_t err = mBufferMapper.importBuffer(handle, uint32_t(width), uint32_t(height),
+-                uint32_t(layerCount), format, usage, uint32_t(stride), &importedHandle);
++        status_t err = mBufferMapper.importBuffer(handle, &importedHandle);
+         if (err != NO_ERROR) {
+             width = height = stride = format = usage_deprecated = 0;
+             layerCount = 0;
+@@ -480,7 +475,6 @@ status_t GraphicBuffer::unflatten(
+         native_handle_close(handle);
+         native_handle_delete(const_cast<native_handle_t*>(handle));
+         handle = importedHandle;
+-        mBufferMapper.getTransportSize(handle, &mTransportNumFds, &mTransportNumInts);
+     }
+ 
+     buffer = static_cast<void const*>(static_cast<uint8_t const*>(buffer) + sizeNeeded);
+diff --git a/libs/ui/GraphicBufferMapper.cpp b/libs/ui/GraphicBufferMapper.cpp
+index 2d8e5824b0..d85448968a 100644
+--- a/libs/ui/GraphicBufferMapper.cpp
++++ b/libs/ui/GraphicBufferMapper.cpp
+@@ -52,43 +52,17 @@ GraphicBufferMapper::GraphicBufferMapper()
+ }
+ 
+ status_t GraphicBufferMapper::importBuffer(buffer_handle_t rawHandle,
+-        uint32_t width, uint32_t height, uint32_t layerCount,
+-        PixelFormat format, uint64_t usage, uint32_t stride,
+         buffer_handle_t* outHandle)
+ {
+     ATRACE_CALL();
+ 
+-    buffer_handle_t bufferHandle;
+     Gralloc2::Error error = mMapper->importBuffer(
+-            hardware::hidl_handle(rawHandle), &bufferHandle);
+-    if (error != Gralloc2::Error::NONE) {
+-        ALOGW("importBuffer(%p) failed: %d", rawHandle, error);
+-        return static_cast<status_t>(error);
+-    }
+-
+-    Gralloc2::IMapper::BufferDescriptorInfo info = {};
+-    info.width = width;
+-    info.height = height;
+-    info.layerCount = layerCount;
+-    info.format = static_cast<Gralloc2::PixelFormat>(format);
+-    info.usage = usage;
+-
+-    error = mMapper->validateBufferSize(bufferHandle, info, stride);
+-    if (error != Gralloc2::Error::NONE) {
+-        ALOGE("validateBufferSize(%p) failed: %d", rawHandle, error);
+-        freeBuffer(bufferHandle);
+-        return static_cast<status_t>(error);
+-    }
+-
+-    *outHandle = bufferHandle;
++            hardware::hidl_handle(rawHandle), outHandle);
+ 
+-    return NO_ERROR;
+-}
++    ALOGW_IF(error != Gralloc2::Error::NONE, "importBuffer(%p) failed: %d",
++            rawHandle, error);
+ 
+-void GraphicBufferMapper::getTransportSize(buffer_handle_t handle,
+-            uint32_t* outTransportNumFds, uint32_t* outTransportNumInts)
+-{
+-    mMapper->getTransportSize(handle, outTransportNumFds, outTransportNumInts);
++    return static_cast<status_t>(error);
+ }
+ 
+ status_t GraphicBufferMapper::freeBuffer(buffer_handle_t handle)
+diff --git a/libs/ui/include/ui/Gralloc2.h b/libs/ui/include/ui/Gralloc2.h
+index db3f10a1ae..ec2391a26f 100644
+--- a/libs/ui/include/ui/Gralloc2.h
++++ b/libs/ui/include/ui/Gralloc2.h
+@@ -22,7 +22,6 @@
+ #include <android/hardware/graphics/allocator/2.0/IAllocator.h>
+ #include <android/hardware/graphics/common/1.1/types.h>
+ #include <android/hardware/graphics/mapper/2.0/IMapper.h>
+-#include <android/hardware/graphics/mapper/2.1/IMapper.h>
+ #include <utils/StrongPointer.h>
+ 
+ namespace android {
+@@ -57,13 +56,6 @@ public:
+ 
+     void freeBuffer(buffer_handle_t bufferHandle) const;
+ 
+-    Error validateBufferSize(buffer_handle_t bufferHandle,
+-            const IMapper::BufferDescriptorInfo& descriptorInfo,
+-            uint32_t stride) const;
+-
+-    void getTransportSize(buffer_handle_t bufferHandle,
+-            uint32_t* outNumFds, uint32_t* outNumInts) const;
+-
+     // The ownership of acquireFence is always transferred to the callee, even
+     // on errors.
+     Error lock(buffer_handle_t bufferHandle, uint64_t usage,
+@@ -86,7 +78,6 @@ private:
+             const IMapper::BufferDescriptorInfo& descriptorInfo) const;
+ 
+     sp<IMapper> mMapper;
+-    sp<hardware::graphics::mapper::V2_1::IMapper> mMapperV2_1;
+ };
+ 
+ // A wrapper to IAllocator
+diff --git a/libs/ui/include/ui/GraphicBuffer.h b/libs/ui/include/ui/GraphicBuffer.h
+index cc38982e64..50938263f8 100644
+--- a/libs/ui/include/ui/GraphicBuffer.h
++++ b/libs/ui/include/ui/GraphicBuffer.h
+@@ -236,10 +236,6 @@ private:
+     GraphicBufferMapper& mBufferMapper;
+     ssize_t mInitCheck;
+ 
+-    // numbers of fds/ints in native_handle_t to flatten
+-    uint32_t mTransportNumFds;
+-    uint32_t mTransportNumInts;
+-
+     uint64_t mId;
+ 
+     // Stores the generation number of this buffer. If this number does not
+diff --git a/libs/ui/include/ui/GraphicBufferMapper.h b/libs/ui/include/ui/GraphicBufferMapper.h
+index 7cf003dcba..06961b11b5 100644
+--- a/libs/ui/include/ui/GraphicBufferMapper.h
++++ b/libs/ui/include/ui/GraphicBufferMapper.h
+@@ -22,7 +22,6 @@
+ 
+ #include <memory>
+ 
+-#include <ui/PixelFormat.h>
+ #include <utils/Singleton.h>
+ 
+ 
+@@ -50,15 +49,10 @@ public:
+     // The imported outHandle must be freed with freeBuffer when no longer
+     // needed. rawHandle is owned by the caller.
+     status_t importBuffer(buffer_handle_t rawHandle,
+-            uint32_t width, uint32_t height, uint32_t layerCount,
+-            PixelFormat format, uint64_t usage, uint32_t stride,
+             buffer_handle_t* outHandle);
+ 
+     status_t freeBuffer(buffer_handle_t handle);
+ 
+-    void getTransportSize(buffer_handle_t handle,
+-            uint32_t* outTransportNumFds, uint32_t* outTransportNumInts);
+-
+     status_t lock(buffer_handle_t handle,
+             uint32_t usage, const Rect& bounds, void** vaddr);
+ 
+-- 
+2.43.0
+

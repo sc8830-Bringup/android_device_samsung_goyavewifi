@@ -1,0 +1,27 @@
+From 5b8d29764a6b7ac02265aa910f67c5fbab3a1b38 Mon Sep 17 00:00:00 2001
+From: ahnet-69 <syedmusicrealise@gmail.com>
+Date: Fri, 27 Dec 2024 16:16:08 +0000
+Subject: [PATCH 5/5] libs/ui: Fixup gralloc1 src for pie
+
+---
+ libs/ui/Gralloc1.cpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/libs/ui/Gralloc1.cpp b/libs/ui/Gralloc1.cpp
+index 64a8b40441..a9ce52f9ae 100644
+--- a/libs/ui/Gralloc1.cpp
++++ b/libs/ui/Gralloc1.cpp
+@@ -484,9 +484,8 @@ Loader::Loader()
+   : mDevice(nullptr)
+ {
+     hw_module_t const* module;
+-    int err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
++    hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &module);
+     uint8_t majorVersion = (module->module_api_version >> 8) & 0xFF;
+-    uint8_t minorVersion = module->module_api_version & 0xFF;
+     gralloc1_device_t* device = nullptr;
+     if (majorVersion == 1) {
+         gralloc1_open(module, &device);
+-- 
+2.43.0
+

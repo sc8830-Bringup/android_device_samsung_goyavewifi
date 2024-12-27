@@ -1,0 +1,129 @@
+From d2071c5e496c3a33eaaf72898efd4c9910a34204 Mon Sep 17 00:00:00 2001
+From: ahnet-69 <syedmusicrealise@gmail.com>
+Date: Fri, 27 Dec 2024 15:14:29 +0000
+Subject: [PATCH 1/5] Revert "libui: use IMapper::createDescriptor_2_1"
+
+This reverts commit 4f55f16638c161834d39e1581d069780f8918c2f.
+---
+ libs/ui/Gralloc2.cpp          | 49 ++++++++++++++++-------------------
+ libs/ui/include/ui/Gralloc2.h |  8 +++---
+ 2 files changed, 27 insertions(+), 30 deletions(-)
+
+diff --git a/libs/ui/Gralloc2.cpp b/libs/ui/Gralloc2.cpp
+index 918251f9dc..b4d5125cb0 100644
+--- a/libs/ui/Gralloc2.cpp
++++ b/libs/ui/Gralloc2.cpp
+@@ -63,7 +63,8 @@ uint64_t getValid11UsageBits() {
+         for (const auto bit : hardware::hidl_enum_iterator<BufferUsage>()) {
+             bits = bits | bit;
+         }
+-        return bits;
++        // Return only the overlapping bits.
++        return bits & ~getValid10UsageBits();
+     }();
+     return valid11UsageBits;
+ }
+@@ -76,7 +77,7 @@ void Mapper::preload() {
+ 
+ Mapper::Mapper()
+ {
+-    mMapper = hardware::graphics::mapper::V2_0::IMapper::getService();
++    mMapper = IMapper::getService();
+     if (mMapper == nullptr) {
+         LOG_ALWAYS_FATAL("gralloc-mapper is missing");
+     }
+@@ -85,7 +86,7 @@ Mapper::Mapper()
+     }
+ 
+     // IMapper 2.1 is optional
+-    mMapperV2_1 = IMapper::castFrom(mMapper);
++    mMapperV2_1 = hardware::graphics::mapper::V2_1::IMapper::castFrom(mMapper);
+ }
+ 
+ Gralloc2::Error Mapper::validateBufferDescriptorInfo(
+@@ -107,34 +108,30 @@ Error Mapper::createDescriptor(
+         const IMapper::BufferDescriptorInfo& descriptorInfo,
+         BufferDescriptor* outDescriptor) const
+ {
+-    Error error = validateBufferDescriptorInfo(descriptorInfo);
++    Error error;
++
++    if (descriptorInfo.usage & getValid11UsageBits()) {
++        // TODO(b/66900669): Use mMapperV2_1->createDescriptorV2_1().
++        ALOGW("full support for new usage bits is unimplemented 0x%" PRIx64,
++              descriptorInfo.usage & getValid11UsageBits());
++        return Error::BAD_VALUE;
++    }
++
++    error = validateBufferDescriptorInfo(descriptorInfo);
+     if (error != Error::NONE) {
+         return error;
+     }
+ 
+-    auto hidl_cb = [&](const auto& tmpError, const auto& tmpDescriptor)
+-                   {
+-                       error = tmpError;
+-                       if (error != Error::NONE) {
+-                           return;
+-                       }
+-
+-                       *outDescriptor = tmpDescriptor;
+-                   };
++    auto ret = mMapper->createDescriptor(descriptorInfo,
++            [&](const auto& tmpError, const auto& tmpDescriptor)
++            {
++                error = tmpError;
++                if (error != Error::NONE) {
++                    return;
++                }
+ 
+-    hardware::Return<void> ret;
+-    if (mMapperV2_1 != nullptr) {
+-        ret = mMapperV2_1->createDescriptor_2_1(descriptorInfo, hidl_cb);
+-    } else {
+-        const hardware::graphics::mapper::V2_0::IMapper::BufferDescriptorInfo info = {
+-            descriptorInfo.width,
+-            descriptorInfo.height,
+-            descriptorInfo.layerCount,
+-            static_cast<hardware::graphics::common::V1_0::PixelFormat>(descriptorInfo.format),
+-            descriptorInfo.usage,
+-        };
+-        ret = mMapper->createDescriptor(info, hidl_cb);
+-    }
++                *outDescriptor = tmpDescriptor;
++            });
+ 
+     return (ret.isOk()) ? error : kTransactionError;
+ }
+diff --git a/libs/ui/include/ui/Gralloc2.h b/libs/ui/include/ui/Gralloc2.h
+index 5a8dbda5d3..db3f10a1ae 100644
+--- a/libs/ui/include/ui/Gralloc2.h
++++ b/libs/ui/include/ui/Gralloc2.h
+@@ -30,11 +30,11 @@ namespace android {
+ namespace Gralloc2 {
+ 
+ using hardware::graphics::allocator::V2_0::IAllocator;
++using hardware::graphics::common::V1_0::PixelFormat;
+ using hardware::graphics::common::V1_1::BufferUsage;
+-using hardware::graphics::common::V1_1::PixelFormat;
+-using hardware::graphics::mapper::V2_1::IMapper;
+ using hardware::graphics::mapper::V2_0::BufferDescriptor;
+ using hardware::graphics::mapper::V2_0::Error;
++using hardware::graphics::mapper::V2_0::IMapper;
+ using hardware::graphics::mapper::V2_0::YCbCrLayout;
+ 
+ // A wrapper to IMapper
+@@ -85,8 +85,8 @@ private:
+     Error validateBufferDescriptorInfo(
+             const IMapper::BufferDescriptorInfo& descriptorInfo) const;
+ 
+-    sp<hardware::graphics::mapper::V2_0::IMapper> mMapper;
+-    sp<IMapper> mMapperV2_1;
++    sp<IMapper> mMapper;
++    sp<hardware::graphics::mapper::V2_1::IMapper> mMapperV2_1;
+ };
+ 
+ // A wrapper to IAllocator
+-- 
+2.43.0
+

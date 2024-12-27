@@ -1,0 +1,292 @@
+From cb4bd167a8a53fc76242f38b90d43313971fcea3 Mon Sep 17 00:00:00 2001
+From: ahnet-69 <syedmusicrealise@gmail.com>
+Date: Fri, 27 Dec 2024 15:46:17 +0000
+Subject: [PATCH 3/5] Revert "Add new AHardwareBuffer formats and usages with
+ latest HAL change"
+
+This reverts commit e6ecb920255d4dd4182ced22c75cc7c49355b469.
+---
+ libs/nativewindow/AHardwareBuffer.cpp         | 26 +------
+ libs/nativewindow/Android.bp                  |  2 +-
+ .../include/android/hardware_buffer.h         | 46 -------------
+ libs/ui/Gralloc2.cpp                          | 67 -------------------
+ libs/ui/include/ui/Gralloc2.h                 |  7 +-
+ 5 files changed, 4 insertions(+), 144 deletions(-)
+
+diff --git a/libs/nativewindow/AHardwareBuffer.cpp b/libs/nativewindow/AHardwareBuffer.cpp
+index 7e26b0b587..e61b9c1b48 100644
+--- a/libs/nativewindow/AHardwareBuffer.cpp
++++ b/libs/nativewindow/AHardwareBuffer.cpp
+@@ -29,7 +29,7 @@
+ #include <system/graphics.h>
+ 
+ #include <private/android/AHardwareBufferHelpers.h>
+-#include <android/hardware/graphics/common/1.1/types.h>
++#include <android/hardware/graphics/common/1.0/types.h>
+ 
+ 
+ static constexpr int kFdBufferSize = 128 * sizeof(int);  // 128 ints
+@@ -347,18 +347,6 @@ bool AHardwareBuffer_isValidPixelFormat(uint32_t format) {
+             "HAL and AHardwareBuffer pixel format don't match");
+     static_assert(HAL_PIXEL_FORMAT_BLOB == AHARDWAREBUFFER_FORMAT_BLOB,
+             "HAL and AHardwareBuffer pixel format don't match");
+-    static_assert(HAL_PIXEL_FORMAT_DEPTH_16 == AHARDWAREBUFFER_FORMAT_D16_UNORM,
+-            "HAL and AHardwareBuffer pixel format don't match");
+-    static_assert(HAL_PIXEL_FORMAT_DEPTH_24 == AHARDWAREBUFFER_FORMAT_D24_UNORM,
+-            "HAL and AHardwareBuffer pixel format don't match");
+-    static_assert(HAL_PIXEL_FORMAT_DEPTH_24_STENCIL_8 == AHARDWAREBUFFER_FORMAT_D24_UNORM_S8_UINT,
+-            "HAL and AHardwareBuffer pixel format don't match");
+-    static_assert(HAL_PIXEL_FORMAT_DEPTH_32F == AHARDWAREBUFFER_FORMAT_D32_FLOAT,
+-            "HAL and AHardwareBuffer pixel format don't match");
+-    static_assert(HAL_PIXEL_FORMAT_DEPTH_32F_STENCIL_8 == AHARDWAREBUFFER_FORMAT_D32_FLOAT_S8_UINT,
+-            "HAL and AHardwareBuffer pixel format don't match");
+-    static_assert(HAL_PIXEL_FORMAT_STENCIL_8 == AHARDWAREBUFFER_FORMAT_S8_UINT,
+-            "HAL and AHardwareBuffer pixel format don't match");
+     static_assert(HAL_PIXEL_FORMAT_BGRA_8888 == AHARDWAREBUFFER_FORMAT_B8G8R8A8_UNORM,
+             "HAL and AHardwareBuffer pixel format don't match");
+     static_assert(HAL_PIXEL_FORMAT_YV12 == AHARDWAREBUFFER_FORMAT_YV12,
+@@ -394,12 +382,6 @@ bool AHardwareBuffer_isValidPixelFormat(uint32_t format) {
+         case AHARDWAREBUFFER_FORMAT_R16G16B16A16_FLOAT:
+         case AHARDWAREBUFFER_FORMAT_R10G10B10A2_UNORM:
+         case AHARDWAREBUFFER_FORMAT_BLOB:
+-        case AHARDWAREBUFFER_FORMAT_D16_UNORM:
+-        case AHARDWAREBUFFER_FORMAT_D24_UNORM:
+-        case AHARDWAREBUFFER_FORMAT_D24_UNORM_S8_UINT:
+-        case AHARDWAREBUFFER_FORMAT_D32_FLOAT:
+-        case AHARDWAREBUFFER_FORMAT_D32_FLOAT_S8_UINT:
+-        case AHARDWAREBUFFER_FORMAT_S8_UINT:
+             // VNDK formats only -- unfortunately we can't differentiate from where we're called
+         case AHARDWAREBUFFER_FORMAT_B8G8R8A8_UNORM:
+         case AHARDWAREBUFFER_FORMAT_YV12:
+@@ -430,7 +412,7 @@ uint32_t AHardwareBuffer_convertToPixelFormat(uint32_t ahardwarebuffer_format) {
+ }
+ 
+ uint64_t AHardwareBuffer_convertToGrallocUsageBits(uint64_t usage) {
+-    using android::hardware::graphics::common::V1_1::BufferUsage;
++    using android::hardware::graphics::common::V1_0::BufferUsage;
+     static_assert(AHARDWAREBUFFER_USAGE_CPU_READ_NEVER == (uint64_t)BufferUsage::CPU_READ_NEVER,
+             "gralloc and AHardwareBuffer flags don't match");
+     static_assert(AHARDWAREBUFFER_USAGE_CPU_READ_RARELY == (uint64_t)BufferUsage::CPU_READ_RARELY,
+@@ -455,10 +437,6 @@ uint64_t AHardwareBuffer_convertToGrallocUsageBits(uint64_t usage) {
+             "gralloc and AHardwareBuffer flags don't match");
+     static_assert(AHARDWAREBUFFER_USAGE_SENSOR_DIRECT_DATA == (uint64_t)BufferUsage::SENSOR_DIRECT_DATA,
+             "gralloc and AHardwareBuffer flags don't match");
+-    static_assert(AHARDWAREBUFFER_USAGE_GPU_CUBE_MAP == (uint64_t)BufferUsage::GPU_CUBE_MAP,
+-            "gralloc and AHardwareBuffer flags don't match");
+-    static_assert(AHARDWAREBUFFER_USAGE_GPU_MIPMAP_COMPLETE == (uint64_t)BufferUsage::GPU_MIPMAP_COMPLETE,
+-            "gralloc and AHardwareBuffer flags don't match");
+     return usage;
+ }
+ 
+diff --git a/libs/nativewindow/Android.bp b/libs/nativewindow/Android.bp
+index 5fbb3b2f87..29555fde9d 100644
+--- a/libs/nativewindow/Android.bp
++++ b/libs/nativewindow/Android.bp
+@@ -60,7 +60,7 @@ cc_library {
+         "liblog",
+         "libutils",
+         "libui",
+-        "android.hardware.graphics.common@1.1",
++        "android.hardware.graphics.common@1.0",
+     ],
+ 
+     static_libs: [
+diff --git a/libs/nativewindow/include/android/hardware_buffer.h b/libs/nativewindow/include/android/hardware_buffer.h
+index 78cec41b4e..76f48663e6 100644
+--- a/libs/nativewindow/include/android/hardware_buffer.h
++++ b/libs/nativewindow/include/android/hardware_buffer.h
+@@ -82,48 +82,6 @@ enum {
+      * the buffer size in bytes.
+      */
+     AHARDWAREBUFFER_FORMAT_BLOB                     = 0x21,
+-
+-    /**
+-     * Corresponding formats:
+-     *   Vulkan: VK_FORMAT_D16_UNORM
+-     *   OpenGL ES: GL_DEPTH_COMPONENT16
+-     */
+-    AHARDWAREBUFFER_FORMAT_D16_UNORM                = 0x30,
+-
+-    /**
+-     * Corresponding formats:
+-     *   Vulkan: VK_FORMAT_X8_D24_UNORM_PACK32
+-     *   OpenGL ES: GL_DEPTH_COMPONENT24
+-     */
+-    AHARDWAREBUFFER_FORMAT_D24_UNORM                = 0x31,
+-
+-    /**
+-     * Corresponding formats:
+-     *   Vulkan: VK_FORMAT_D24_UNORM_S8_UINT
+-     *   OpenGL ES: GL_DEPTH24_STENCIL8
+-     */
+-    AHARDWAREBUFFER_FORMAT_D24_UNORM_S8_UINT        = 0x32,
+-
+-    /**
+-     * Corresponding formats:
+-     *   Vulkan: VK_FORMAT_D32_SFLOAT
+-     *   OpenGL ES: GL_DEPTH_COMPONENT32F
+-     */
+-    AHARDWAREBUFFER_FORMAT_D32_FLOAT                = 0x33,
+-
+-    /**
+-     * Corresponding formats:
+-     *   Vulkan: VK_FORMAT_D32_SFLOAT_S8_UINT
+-     *   OpenGL ES: GL_DEPTH32F_STENCIL8
+-     */
+-    AHARDWAREBUFFER_FORMAT_D32_FLOAT_S8_UINT        = 0x34,
+-
+-    /**
+-     * Corresponding formats:
+-     *   Vulkan: VK_FORMAT_S8_UINT
+-     *   OpenGL ES: GL_STENCIL_INDEX8
+-     */
+-    AHARDWAREBUFFER_FORMAT_S8_UINT                  = 0x35,
+ };
+ 
+ /**
+@@ -166,10 +124,6 @@ enum {
+     AHARDWAREBUFFER_USAGE_SENSOR_DIRECT_DATA     = 1UL << 23,
+     /// The buffer will be used as a shader storage or uniform buffer object.
+     AHARDWAREBUFFER_USAGE_GPU_DATA_BUFFER        = 1UL << 24,
+-    /// The buffer will be used as a cube map texture.
+-    AHARDWAREBUFFER_USAGE_GPU_CUBE_MAP               = 1UL << 25,
+-    /// The buffer contains a complete mipmap hierarchy.
+-    AHARDWAREBUFFER_USAGE_GPU_MIPMAP_COMPLETE        = 1UL << 26,
+ 
+     AHARDWAREBUFFER_USAGE_VENDOR_0  = 1ULL << 28,
+     AHARDWAREBUFFER_USAGE_VENDOR_1  = 1ULL << 29,
+diff --git a/libs/ui/Gralloc2.cpp b/libs/ui/Gralloc2.cpp
+index 73ccba0792..0eb08e59a9 100644
+--- a/libs/ui/Gralloc2.cpp
++++ b/libs/ui/Gralloc2.cpp
+@@ -20,7 +20,6 @@
+ #include <hwbinder/IPCThreadState.h>
+ #include <ui/Gralloc2.h>
+ 
+-#include <inttypes.h>
+ #include <log/log.h>
+ #pragma clang diagnostic push
+ #pragma clang diagnostic ignored "-Wzero-length-array"
+@@ -31,46 +30,8 @@ namespace android {
+ 
+ namespace Gralloc2 {
+ 
+-namespace {
+-
+ static constexpr Error kTransactionError = Error::NO_RESOURCES;
+ 
+-uint64_t getValid10UsageBits() {
+-    static const uint64_t valid10UsageBits = []() -> uint64_t {
+-        using hardware::graphics::common::V1_0::BufferUsage;
+-        uint64_t bits = 0;
+-        for (const auto bit : hardware::hidl_enum_iterator<BufferUsage>()) {
+-            bits = bits | bit;
+-        }
+-        // TODO(b/72323293, b/72703005): Remove these additional bits
+-        bits = bits | (1 << 10) | (1 << 13);
+-
+-#ifdef ADDNL_GRALLOC_10_USAGE_BITS
+-        uint64_t addnl_bits = static_cast<uint64_t>(ADDNL_GRALLOC_10_USAGE_BITS);
+-        ALOGI("Adding additional valid usage bits: 0x%" PRIx64, addnl_bits);
+-        bits = bits | addnl_bits;
+-#endif
+-
+-        return bits;
+-    }();
+-    return valid10UsageBits;
+-}
+-
+-uint64_t getValid11UsageBits() {
+-    static const uint64_t valid11UsageBits = []() -> uint64_t {
+-        using hardware::graphics::common::V1_1::BufferUsage;
+-        uint64_t bits = 0;
+-        for (const auto bit : hardware::hidl_enum_iterator<BufferUsage>()) {
+-            bits = bits | bit;
+-        }
+-        // Return only the overlapping bits.
+-        return bits & ~getValid10UsageBits();
+-    }();
+-    return valid11UsageBits;
+-}
+-
+-}  // anonymous namespace
+-
+ void Mapper::preload() {
+     android::hardware::preloadPassthroughService<hardware::graphics::mapper::V2_0::IMapper>();
+ }
+@@ -83,39 +44,11 @@ Mapper::Mapper()
+     }
+ }
+ 
+-Gralloc2::Error Mapper::validateBufferDescriptorInfo(
+-        const IMapper::BufferDescriptorInfo& descriptorInfo) const {
+-    uint64_t validUsageBits = getValid10UsageBits();
+-    if (mMapperV2_1 != nullptr) {
+-        validUsageBits = validUsageBits | getValid11UsageBits();
+-    }
+-
+-    if (descriptorInfo.usage & ~validUsageBits) {
+-        ALOGE("buffer descriptor contains invalid usage bits 0x%" PRIx64,
+-              descriptorInfo.usage & ~validUsageBits);
+-        return Error::BAD_VALUE;
+-    }
+-    return Error::NONE;
+-}
+-
+ Error Mapper::createDescriptor(
+         const IMapper::BufferDescriptorInfo& descriptorInfo,
+         BufferDescriptor* outDescriptor) const
+ {
+     Error error;
+-
+-    if (descriptorInfo.usage & getValid11UsageBits()) {
+-        // TODO(b/66900669): Use mMapperV2_1->createDescriptorV2_1().
+-        ALOGW("full support for new usage bits is unimplemented 0x%" PRIx64,
+-              descriptorInfo.usage & getValid11UsageBits());
+-        return Error::BAD_VALUE;
+-    }
+-
+-    error = validateBufferDescriptorInfo(descriptorInfo);
+-    if (error != Error::NONE) {
+-        return error;
+-    }
+-
+     auto ret = mMapper->createDescriptor(descriptorInfo,
+             [&](const auto& tmpError, const auto& tmpDescriptor)
+             {
+diff --git a/libs/ui/include/ui/Gralloc2.h b/libs/ui/include/ui/Gralloc2.h
+index ec2391a26f..8aee16033a 100644
+--- a/libs/ui/include/ui/Gralloc2.h
++++ b/libs/ui/include/ui/Gralloc2.h
+@@ -20,7 +20,6 @@
+ #include <string>
+ 
+ #include <android/hardware/graphics/allocator/2.0/IAllocator.h>
+-#include <android/hardware/graphics/common/1.1/types.h>
+ #include <android/hardware/graphics/mapper/2.0/IMapper.h>
+ #include <utils/StrongPointer.h>
+ 
+@@ -29,8 +28,8 @@ namespace android {
+ namespace Gralloc2 {
+ 
+ using hardware::graphics::allocator::V2_0::IAllocator;
++using hardware::graphics::common::V1_0::BufferUsage;
+ using hardware::graphics::common::V1_0::PixelFormat;
+-using hardware::graphics::common::V1_1::BufferUsage;
+ using hardware::graphics::mapper::V2_0::BufferDescriptor;
+ using hardware::graphics::mapper::V2_0::Error;
+ using hardware::graphics::mapper::V2_0::IMapper;
+@@ -73,10 +72,6 @@ public:
+     int unlock(buffer_handle_t bufferHandle) const;
+ 
+ private:
+-    // Determines whether the passed info is compatible with the mapper.
+-    Error validateBufferDescriptorInfo(
+-            const IMapper::BufferDescriptorInfo& descriptorInfo) const;
+-
+     sp<IMapper> mMapper;
+ };
+ 
+-- 
+2.43.0
+
