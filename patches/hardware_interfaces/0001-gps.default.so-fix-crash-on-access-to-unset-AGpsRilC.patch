@@ -1,4 +1,4 @@
-From 67d4754b68f47daefb1b7941e9267d9b9bd99520 Mon Sep 17 00:00:00 2001
+From fe88eea8c6d9ab3a3f5b6a80ce0295e42e8b0cd3 Mon Sep 17 00:00:00 2001
 From: Tobias Gunkel <hennymcc@yahoo.de>
 Date: Sat, 21 Oct 2017 21:22:25 +0200
 Subject: [PATCH] gps.default.so: fix crash on access to unset
@@ -58,7 +58,7 @@ Change-Id: Ib3d090c1099697a2bd53d9642675995afc2fc7d0
  1 file changed, 25 insertions(+)
 
 diff --git a/gnss/1.0/default/Gnss.cpp b/gnss/1.0/default/Gnss.cpp
-index cfcee24..10bc2d2 100644
+index 32c131c..4bad5be 100644
 --- a/gnss/1.0/default/Gnss.cpp
 +++ b/gnss/1.0/default/Gnss.cpp
 @@ -46,6 +46,25 @@ GpsCallbacks Gnss::sGnssCb = {
@@ -88,7 +88,7 @@ index cfcee24..10bc2d2 100644
  uint16_t Gnss::sYearOfHwCached = 0;
  
 @@ -511,6 +530,12 @@ Return<sp<IAGnssRil>> Gnss::getExtensionAGnssRil()  {
-             ALOGE("%s GnssRil interface not implemented by GNSS HAL", __func__);
+             ALOGI("%s: GnssRil interface not implemented by HAL", __func__);
          } else {
              mGnssRil = new AGnssRil(agpsRilIface);
 +            sp<IAGnssRilCallback> aGnssRilCb = new AGnssRilCallback();
@@ -101,5 +101,5 @@ index cfcee24..10bc2d2 100644
      }
      return mGnssRil;
 -- 
-2.7.4
+2.43.0
 

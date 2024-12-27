@@ -1,11 +1,14 @@
 # Release name
 PRODUCT_RELEASE_NAME := goyavewifi
 
+# Inherit from those products. Most specific first.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
+
 # Inherit some common Lineage stuff.
 $(call inherit-product, vendor/lineage/config/common_mini_tablet_wifionly.mk)
 
 # Inherit device configuration
-$(call inherit-product, $(LOCAL_PATH)/goyavewifi.mk)
+$(call inherit-product, $(LOCAL_PATH)/device.mk)
 
 ## Device identifier. This must come after all inclusions
 PRODUCT_DEVICE := goyavewifi

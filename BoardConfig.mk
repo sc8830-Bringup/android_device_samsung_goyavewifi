@@ -35,6 +35,9 @@ BOARD_HAS_LARGE_FILESYSTEM := true
 # Camera HAL1 hack
 TARGET_HAS_LEGACY_CAMERA_HAL1 := true
 
+# Gralloc
+TARGET_USES_GRALLOC1 := true
+
 # WiFi
 BOARD_WLAN_DEVICE := bcmdhd
 BOARD_WLAN_DEVICE_REV := bcm4343
@@ -66,4 +69,4 @@ TARGET_OTA_ASSERT_DEVICE := SM-T113,SM-T113NU,goyavewifi,goyave
 TARGET_USES_SENSORS_WRAPPER := true
 
 # SELinux policy
-BOARD_SEPOLICY_DIRS += device/samsung/goyavewifi/sepolicy
+#BOARD_SEPOLICY_DIRS += device/samsung/goyavewifi/sepolicy

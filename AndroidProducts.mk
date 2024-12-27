@@ -18,4 +18,4 @@
 #
 
 PRODUCT_MAKEFILES := \
-	$(LOCAL_DIR)/goyavewifi.mk
+	$(LOCAL_DIR)/lineage_goyavewifi.mk
